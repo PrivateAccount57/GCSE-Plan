@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GCSE Plan">
+<meta name="theme-color" content="#3550c8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; form-action 'none'">
+<title>GCSE Game Plan</title>
+<style>
+/* Layout: header with countdown, tabbed views (Today, Subjects, Exam technique, Papers, Set up); cards in auto-fit grids. */
+:root{
+  --paper:#f2f3f7; --panel:#ffffff; --ink:#181c2b; --muted:#5a6078; --line:#dcdfea;
+  --accent:#3550c8; --accent-soft:#e6eafb; --hi:#e3a21a; --good:#2b8a57; --warn:#c0571b; --bad:#c23a3a;
+  --font-display:"Avenir Next","Segoe UI Semibold",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--paper:#11131c;--panel:#1a1d2a;--ink:#e9ebf3;--muted:#9ca2bb;--line:#2c3044;--accent:#8fa3ff;--accent-soft:#232a4a;--hi:#f0b94a;--good:#5cc68c;--warn:#ec8f55;--bad:#f07575;color-scheme:dark}
+}
+:root[data-theme="dark"]{--paper:#11131c;--panel:#1a1d2a;--ink:#e9ebf3;--muted:#9ca2bb;--line:#2c3044;--accent:#8fa3ff;--accent-soft:#232a4a;--hi:#f0b94a;--good:#5cc68c;--warn:#ec8f55;--bad:#f07575;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 20px 64px;display:grid;gap:18px}
+h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:28px;font-weight:700}
+h2{font-size:21px;font-weight:700}
+h3{font-size:16.5px;font-weight:700}
+.muted{color:var(--muted)} .small{font-size:13.5px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.count{display:flex;gap:10px;align-items:baseline;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 14px}
+.count b{font-family:var(--font-display);font-size:26px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.status{font-size:12.5px;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;align-content:start}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs a{padding:10px 14px;color:var(--muted);text-decoration:none;font-weight:650;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--accent)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.two{display:grid;gap:14px;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+@media (max-width:840px){.two{grid-template-columns:1fr}}
+@media (max-width:520px){.wrap{padding:16px 16px 48px}h1{font-size:24px}.brow{grid-template-columns:1fr auto}.brow .bar{grid-column:1/-1;order:3}.seg.energy{grid-template-columns:repeat(3,minmax(0,1fr))}.seg.energy button{padding:10px}.seg.energy button span{font-size:12px}}
+.btn{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:7px 13px;background:var(--panel);font-size:14px;font-weight:650;text-align:center}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.btn.big{padding:12px 20px;font-size:16px}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn:focus-visible,.seg button:focus-visible,.tabs a:focus-visible,.rag:focus-visible,.x:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.seg{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.seg button{all:unset;cursor:pointer;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;display:grid;gap:2px;background:var(--panel)}
+.seg button span{font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.mission{border-left:5px solid var(--hi);padding:4px 0 4px 14px;display:grid;gap:6px}
+.mission .k{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--hi)}
+.mission b{font-size:18px}
+.steps{margin:0;padding-left:20px;display:grid;gap:4px}
+.timer{display:grid;gap:10px;justify-items:center;text-align:center}
+.timer .t{font-family:var(--font-display);font-size:56px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.timer .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pill{display:inline-block;font-size:12px;font-weight:750;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.pill.gap{border-color:var(--warn);color:var(--warn)} .pill.ok{border-color:var(--good);color:var(--good)}
+label.f{display:grid;gap:4px;font-size:13px;font-weight:650;color:var(--muted)}
+input[type=text],input[type=number],input[type=date],textarea,select{font:inherit;font-size:15px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+textarea{min-height:72px;resize:vertical}
+.form{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));align-items:end}
+.subj{border-top:5px solid var(--accent)}
+.topics{display:grid;gap:6px}
+.topic{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:14.5px}
+.rag{all:unset;cursor:pointer;width:62px;text-align:center;font-size:11.5px;font-weight:800;padding:4px 0;border-radius:7px;color:#fff}
+.rag.r0{background:var(--bad)} .rag.r1{background:var(--hi);color:#1a1a1a} .rag.r2{background:var(--good)}
+.x{all:unset;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 6px;border-radius:6px}
+.x:hover{color:var(--bad)}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--pc,var(--accent))}
+.brow{display:grid;grid-template-columns:minmax(120px,210px) 1fr 54px;gap:12px;align-items:center;font-size:14px}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+.cw{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.cw div{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:4px}
+.cw b{font-size:15.5px}
+.out{background:var(--accent-soft);border-radius:12px;padding:14px;display:grid;gap:8px}
+.big-n{font-family:var(--font-display);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+.note{font-size:13.5px;color:var(--muted);background:var(--accent-soft);border-radius:10px;padding:10px 12px}
+.week{display:flex;gap:6px}
+.week span{flex:1;height:30px;border-radius:7px;background:var(--line);display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--muted)}
+.week span.on{background:var(--accent);color:var(--panel)}
+.week span.today{outline:2px solid var(--hi);outline-offset:1px}
+.lost{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.lost label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;font-size:13.5px;color:var(--ink);font-weight:500}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
+var LS = "gcse-game-plan";
+
+/* ---------- reference content ---------- */
+var COMMAND = [
+  {w:"State / Give / Name / Identify", m:"One short fact per mark. No explanation needed.", tip:"Short and precise. Do not waste time explaining."},
+  {w:"Describe", m:"Say what is there or what happens. Use detail and any data you are given.", tip:"No reasons needed. Quote numbers from graphs or tables."},
+  {w:"Explain", m:"Give reasons: how or why. Each point needs a 'because' and a consequence.", tip:"Point, then 'because...', then 'which means...'. Roughly one developed point per 2 marks."},
+  {w:"Compare", m:"Similarities and/or differences, with both things in the same sentence.", tip:"Use 'whereas', 'both', 'however'. Two separate descriptions do not count as a comparison."},
+  {w:"Analyse", m:"Break it down and show how the parts work or link.", tip:"In English: quote, name the technique, explain the effect on the reader, link to the writer's purpose."},
+  {w:"Evaluate / Assess / To what extent", m:"Weigh up both sides, then make a clear judgement.", tip:"For, against, then a conclusion that says which side is stronger and why. No conclusion caps your marks."},
+  {w:"Suggest", m:"Apply what you know to a new situation. Sensible reasons, not memorised ones.", tip:"Link to the example in the question. Anything reasonable and scientific can score."},
+  {w:"Justify", m:"Back up a choice or statement with evidence.", tip:"Say what you chose, then 'because' with evidence from the source or data."},
+  {w:"Calculate / Show that / Work out", m:"Get the answer and show every step.", tip:"Method marks are given even if the final answer is wrong. Write units."},
+  {w:"Discuss", m:"Explore the issue from different angles, with developed points.", tip:"Treat it like a light Evaluate: more than one view, explained."}
+];
+var STRUCTURES = [
+  {s:"English: analysing language", lines:["Make a point that answers the question.","Quote a short phrase (2 to 5 words is best).","Name the technique or word type.","Zoom in: what does one word suggest?","Effect on the reader, then why the writer did it."]},
+  {s:"Maths", lines:["Write down what you are finding.","Show every step, even easy ones.","Write units and round only at the end.","Check: is the answer sensible?","Never leave it blank: method marks are free."]},
+  {s:"Science 6-mark answers", lines:["Plan 6 linked points before writing.","Put them in a logical order (first, then, so).","Use key scientific words.","For 'evaluate', finish with a conclusion.","Re-read the question: answer what it asks, nothing else."]},
+  {s:"RE 'evaluate the statement' answers", lines:["Argument for, developed, with religious teaching or a source.","Argument against, developed the same way.","Say which argument is stronger and why.","Clear conclusion that answers the statement.","Check your exam board's exact requirements with your teacher."]}
+];
+var LOSS = [
+  {id:"underdev", n:"Knew it, but did not write enough", tech:true, fix:"Use the 'because... which means...' chain. Count your points against the marks."},
+  {id:"misread", n:"Did not answer the actual question", tech:true, fix:"Box the command word and underline the key words before writing."},
+  {id:"terms", n:"Missing key words or terminology", tech:true, fix:"Before answering, jot 3 key terms in the margin and use them."},
+  {id:"working", n:"Did not show working or method", tech:true, fix:"Write every step. Markers can only give marks for what they can see."},
+  {id:"time", n:"Ran out of time", tech:true, fix:"Budget time per question (shown in the Answer builder). Move on and come back."},
+  {id:"slip", n:"Careless slip", tech:true, fix:"Leave 5 minutes at the end to check numbers, units and the question wording."},
+  {id:"legible", n:"Hard to read or set out unclearly", tech:true, fix:"Short sentences, one point per line, number your points. Mention this to school too."},
+  {id:"content", n:"Did not know the content", tech:false, fix:"Add this topic as Red in Subjects and revise it in a Steady session."}
+];
+var ENERGY = [null,
+  {n:"Low", t:"10 minutes. Something easy that still counts.", min:10},
+  {n:"OK", t:"One 25-minute session.", min:25},
+  {n:"Good", t:"Two 25-minute sessions with a break.", min:25}
+];
+
+/* ---------- state ---------- */
+function newProfile(name){
+  function sub(id, n){ return {id:id, name:n, board:"", current:"", target:"6", gradeLine:"", topics:[]}; }
+  return {name:name||"", examDate:"2027-05-10", weeklyGoal:5,
+    subjects:[sub("englang","English Language"), sub("englit","English Literature"), sub("maths","Maths"), sub("science","Combined Science"), sub("re","Religious Studies")],
+    sessions:[], papers:[], helps:[], energy:{}, lastBackup:0};
+}
+var store;
+var storageOK = (function(){ try{ localStorage.setItem(LS+"-t","1"); localStorage.removeItem(LS+"-t"); return true; }catch(e){ return false; } })();
+try { store = JSON.parse(localStorage.getItem(LS) || "null"); } catch(e) { store = null; }
+if(!store || !store.profiles){ var first = "p"+Date.now().toString(36); store = {current:first, profiles:{}}; store.profiles[first] = newProfile(""); }
+function P(){ return store.profiles[store.current]; }
+function save(){ if(!storageOK) return; try{ localStorage.setItem(LS, JSON.stringify(store)); }catch(e){} }
+
+/* ---------- dates ---------- */
+function pad(n){ return String(n).padStart(2,"0"); }
+function keyOf(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function parseKey(k){ var p=k.split("-").map(Number); return new Date(p[0],p[1]-1,p[2]); }
+function addDays(k,n){ var d=parseKey(k); d.setDate(d.getDate()+n); return keyOf(d); }
+function wdIndex(k){ return (parseKey(k).getDay()+6)%7; }
+function fmt(k,o){ return parseKey(k).toLocaleDateString("en-GB", o||{day:"numeric",month:"short"}); }
+var TODAY = keyOf(new Date());
+function daysTo(k){ return Math.round((parseKey(k) - parseKey(TODAY))/86400000); }
+
+/* ---------- helpers ---------- */
+function h(tag, props){
+  var el = document.createElement(tag);
+  if(props) Object.keys(props).forEach(function(k){
+    var v = props[k]; if(v == null || v === false) return;
+    if(k==="class") el.className=v; else if(k==="style") el.setAttribute("style",v); else if(k==="text") el.textContent=v;
+    else if(k.slice(0,2)==="on") el.addEventListener(k.slice(2), v);
+    else if(k==="value"||k==="checked"||k==="disabled"||k==="selected") el[k]=v;
+    else el.setAttribute(k, v===true?"":v);
+  });
+  for(var i=2;i<arguments.length;i++) add(el, arguments[i]);
+  return el;
+}
+function add(el,c){ if(c==null||c===false) return; if(Array.isArray(c)){ c.forEach(function(x){add(el,x);}); return; } el.append(c instanceof Node?c:document.createTextNode(String(c))); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function subjName(id){ var s=P().subjects.filter(function(x){return x.id===id;})[0]; return s?s.name:"Other"; }
+function gradeNum(g){ var n=parseInt(g,10); return isNaN(n)?null:n; }
+function selectEl(id, opts, val, onch, label){
+  var s = h("select", {id:id, "aria-label":label||null, onchange:function(e){ onch(e.target.value); }});
+  opts.forEach(function(o){ s.append(h("option", {value:o[0], text:o[1], selected:String(o[0])===String(val)})); });
+  return s;
+}
+var GRADES = [["","Not sure"],["1","1"],["2","2"],["3","3"],["4","4"],["5","5"],["6","6"],["7","7"],["8","8"],["9","9"]];
+
+/* ---------- suggestion engine ---------- */
+function weekKeys(){ var m = addDays(TODAY, -wdIndex(TODAY)); var a=[]; for(var i=0;i<7;i++) a.push(addDays(m,i)); return a; }
+function studiedOn(k){ return P().sessions.some(function(s){ return s.date===k; }); }
+function lossTotals(){
+  var t = {}; LOSS.forEach(function(l){ t[l.id]=0; });
+  P().papers.forEach(function(p){ Object.keys(p.lost||{}).forEach(function(id){ t[id] = (t[id]||0) + (+p.lost[id]||0); }); });
+  return t;
+}
+function topLoss(){
+  var t = lossTotals(), best=null;
+  LOSS.forEach(function(l){ if(t[l.id] > 0 && (!best || t[l.id] > t[best.id])) best = l; });
+  return best;
+}
+function pickFocus(){
+  /* subject with biggest gap, then its reddest, least recently studied topic */
+  var subs = P().subjects.slice().map(function(s){
+    var c = gradeNum(s.current), t = gradeNum(s.target);
+    var gap = (c!=null && t!=null) ? t-c : 0.5;
+    var last = P().sessions.filter(function(x){ return x.subj===s.id; }).reduce(function(a,x){ return x.date>a?x.date:a; }, "");
+    var stale = last ? Math.min(14, daysTo(TODAY) - daysTo(last)) : 14;
+    return {s:s, score: gap*2 + stale/7, gap:gap, last:last};
+  }).sort(function(a,b){ return b.score-a.score; });
+  var top = subs[0]; if(!top) return null;
+  var topics = top.s.topics.slice().sort(function(a,b){ return a.rag-b.rag || (a.last||"").localeCompare(b.last||""); });
+  return {subj:top.s, topic:topics[0]||null, gap:top.gap, last:top.last};
+}
+function mission(energy){
+  var f = pickFocus(); if(!f) return null;
+  var tl = topLoss();
+  var subj = f.subj.name, topic = f.topic ? f.topic.name : null;
+  var why = (f.gap>0 && f.gap!==0.5) ? subj+" has the biggest gap to target ("+f.subj.current+" now, aiming for "+f.subj.target+")." : (f.last ? subj+" has not been touched since "+fmt(f.last,{weekday:"long",day:"numeric",month:"short"})+"." : subj+" has no sessions logged yet.");
+  if(energy===1) return {k:"Low-energy mission", title:"Mark scheme detective: "+subj, why:why, min:10, kind:"Mark scheme",
+    steps:["Pick one past exam question you have already answered.","Read the mark scheme for it, not your answer.","Spot the exact words or steps that earned marks.","Write one line: 'Markers want me to...'"]};
+  if(energy===2) return {k:"Steady mission", title:(topic ? topic+" ("+subj+")" : subj+": pick a Red topic"), why:why, min:25, kind:"Topic + question",
+    steps:["15 minutes: revise "+(topic||"the topic")+" (flashcards, mind map or a video).","10 minutes: answer one exam question on it.","Use the Answer builder first: check command word and marks."+(tl&&tl.tech?" Watch for: "+tl.n.toLowerCase()+".":""),"Mark it with the mark scheme. Log any lost marks."]};
+  return {k:"Power mission", title:"Timed practice: "+subj, why:why, min:25, kind:"Timed practice",
+    steps:["25 minutes: one section of a past paper, timed, exam conditions.","5-minute break. Move about.","25 minutes: mark it with the mark scheme, honestly.","Log the paper in Papers, including where the marks went."]};
+}
+
+/* ---------- timer ---------- */
+var tm = {len:25*60, left:25*60, running:false, iv:null, kind:"Revision", subj:""};
+function tmSet(min){ clearInterval(tm.iv); tm.running=false; tm.len=tm.left=min*60; renderTimer(); }
+function tmToggle(){
+  if(tm.running){ clearInterval(tm.iv); tm.running=false; renderTimer(); return; }
+  tm.running = true; var end = Date.now() + tm.left*1000;
+  tm.iv = setInterval(function(){
+    tm.left = Math.max(0, Math.round((end-Date.now())/1000));
+    if(tm.left===0){ clearInterval(tm.iv); tm.running=false; logSession(Math.round(tm.len/60)); tm.done=true; render(); return; }
+    renderTimer();
+  }, 500);
+  renderTimer();
+}
+function logSession(min){ P().sessions.push({date:TODAY, subj:tm.subj||(P().subjects[0]||{}).id||"", min:min, kind:tm.kind}); save(); }
+var timerEls = null;
+function renderTimer(){ if(!timerEls) return; var m=Math.floor(tm.left/60), s=tm.left%60; timerEls.t.textContent = pad(m)+":"+pad(s); timerEls.b.textContent = tm.running?"Pause":(tm.left<tm.len?"Resume":"Start"); }
+
+/* ---------- routing ---------- */
+var TABS=[["today","Today"],["subjects","Subjects"],["technique","Exam technique"],["papers","Papers"],["setup","Set up"]];
+function current(){ var t=location.hash.slice(1); return TABS.some(function(x){return x[0]===t;})?t:"today"; }
+window.addEventListener("hashchange", render);
+
+function render(){
+  var app = document.getElementById("app"), sy = window.scrollY;
+  app.style.minHeight = app.offsetHeight+"px"; app.textContent = ""; timerEls = null;
+  setTimeout(function(){ app.style.minHeight=""; window.scrollTo(0,sy); },0);
+  var p = P(), tab = current(), d = daysTo(p.examDate);
+  var names = Object.keys(store.profiles);
+  var wrap = h("div", {class:"wrap"},
+    h("div", {class:"top"},
+      h("div", null, h("div", {class:"small muted", text:fmt(TODAY,{weekday:"long",day:"numeric",month:"long"})}), h("h1", {text:(p.name ? p.name+"'s" : "My")+" GCSE game plan"})),
+      h("div", {style:"display:flex;gap:10px;align-items:center;flex-wrap:wrap"},
+        names.length>1 ? selectEl("who", names.map(function(id){ return [id, store.profiles[id].name || "Unnamed"]; }), store.current, function(v){ store.current=v; save(); render(); }, "Whose plan") : null,
+        h("div", {class:"count"}, h("b", {text: d>=0 ? String(d) : "0"}), h("span", {class:"small muted", text: d>0 ? "days to the first exam ("+Math.floor(d/7)+" weeks)" : "Exams have started"})))),
+    h("nav", {class:"tabs", "aria-label":"Sections"}, TABS.map(function(t){ return h("a",{href:"#"+t[0],"aria-current":tab===t[0]?"page":null,text:t[1]}); })));
+  ({today:vToday, subjects:vSubjects, technique:vTechnique, papers:vPapers, setup:vSetup})[tab](wrap);
+  wrap.append(h("div", {class:"status", text: storageOK ? "Saved on this device only. Nothing goes online." : "This browser is blocking storage: download a backup in Set up before closing."}));
+  app.append(wrap);
+}
+
+/* ---------- Today ---------- */
+function vToday(wrap){
+  var p = P(), en = p.energy[TODAY] || 0;
+  wrap.append(h("div", {class:"panel"}, h("h3", {text:"How is your energy right now?"}),
+    h("div", {class:"seg energy", role:"group", "aria-label":"Energy"}, [1,2,3].map(function(e){
+      return h("button", {type:"button", "aria-pressed":String(en===e), onclick:function(){ p.energy[TODAY] = en===e?0:e; save(); var m=mission(p.energy[TODAY]); if(m){ tm.kind=m.kind; var f=pickFocus(); tm.subj=f?f.subj.id:""; tmSet(m.min); } render(); }},
+        h("b", {text:ENERGY[e].n}), h("span", {text:ENERGY[e].t}));
+    })),
+    h("div", {class:"small muted", text:"Any of these counts. A Low day done is better than a Good day skipped."})));
+
+  var m = en ? mission(en) : null;
+  var left = h("div", {class:"panel"});
+  if(m){
+    left.append(h("div", {class:"mission"}, h("span", {class:"k", text:m.k}), h("b", {text:m.title}), h("span", {class:"small muted", text:m.why})),
+      h("ol", {class:"steps"}, m.steps.map(function(s){ return h("li", {text:s}); })),
+      h("div", {class:"small muted", text:"Not feeling this one? Pick any subject below and press Start. Choice is fine."}));
+  } else left.append(h("h3", {text:"Today's mission"}), h("div", {class:"muted", text:"Choose your energy level and a mission appears here, matched to where marks are easiest to gain."}));
+
+  var subjSel = selectEl("tm-subj", p.subjects.map(function(s){ return [s.id, s.name]; }), tm.subj || (p.subjects[0]||{}).id, function(v){ tm.subj=v; }, "Subject");
+  if(!tm.subj && p.subjects[0]) tm.subj = p.subjects[0].id;
+  var t = h("div", {class:"t", role:"timer", "aria-live":"off"}), b = h("button", {class:"btn primary big", type:"button", onclick:tmToggle});
+  timerEls = {t:t, b:b};
+  var timer = h("div", {class:"panel timer"}, h("h3", {text:"Focus timer"}),
+    h("label", {class:"f", for:"tm-subj", style:"width:100%;max-width:280px;text-align:left"}, "Subject", subjSel),
+    h("div", {class:"row"}, [5,10,15,25].map(function(n){ return h("button", {class:"btn", type:"button", "aria-pressed":String(tm.len===n*60), onclick:function(){ tmSet(n); }, text:n+" min"}); })),
+    t, h("div", {class:"row"}, b, h("button", {class:"btn", type:"button", onclick:function(){ tmSet(Math.round(tm.len/60)); }, text:"Reset"}),
+      h("button", {class:"btn", type:"button", onclick:function(){ var used = Math.max(1, Math.round((tm.len-tm.left)/60)); logSession(used); tmSet(Math.round(tm.len/60)); tm.done=true; render(); }, text:"Done early, log it"})),
+    tm.done ? h("div", {class:"pill ok", text:"Session logged. Nice work."}) : h("div", {class:"small muted", text:"Sessions log themselves when the timer ends."}));
+  wrap.append(h("div", {class:"two"}, left, timer));
+  renderTimer();
+
+  var wk = weekKeys(), studied = wk.filter(studiedOn).length;
+  var mins = p.sessions.filter(function(s){ return wk.indexOf(s.date)>=0; }).reduce(function(a,s){ return a+s.min; },0);
+  var tl = topLoss();
+  wrap.append(h("div", {class:"two"},
+    h("div", {class:"panel"}, h("h3", {text:"This week"}),
+      h("div", {class:"week"}, wk.map(function(k){ return h("span", {class:(studiedOn(k)?"on":"")+(k===TODAY?" today":""), text:fmt(k,{weekday:"narrow"})}); })),
+      h("div", {class:"small", text:studied+" of "+p.weeklyGoal+" study days · "+mins+" minutes"+(studied>=p.weeklyGoal?" · goal reached":"")})),
+    h("div", {class:"panel"}, h("h3", {text:"Technique focus"}),
+      tl ? [h("b", {text:"Most marks lost to: "+tl.n.toLowerCase()}), h("div", {class:"small", text:tl.fix})]
+         : h("div", {class:"small muted", text:"Log a marked practice paper in Papers and this will show the one habit worth the most marks."}))));
+}
+
+/* ---------- Subjects ---------- */
+function vSubjects(wrap){
+  var p = P();
+  wrap.append(h("div", {class:"note", text:"Tap a topic's colour to change it: Red (do not get it yet), Amber (sort of), Green (could teach it). Missions pick from the reds first."}));
+  var g = h("div", {class:"grid"});
+  p.subjects.forEach(function(s){
+    var c = gradeNum(s.current), t = gradeNum(s.target);
+    var chip = (c!=null&&t!=null) ? (t>c ? h("span",{class:"pill gap",text:(t-c)+" grade"+(t-c>1?"s":"")+" to go"}) : h("span",{class:"pill ok",text:"On target"})) : h("span",{class:"pill",text:"Add current grade"});
+    var reds = s.topics.filter(function(x){return x.rag===0;}).length, greens = s.topics.filter(function(x){return x.rag===2;}).length;
+    var list = h("div", {class:"topics"});
+    s.topics.forEach(function(tp, i){
+      list.append(h("div", {class:"topic"},
+        h("button", {class:"rag r"+tp.rag, type:"button", "aria-label":tp.name+": "+["Red","Amber","Green"][tp.rag]+". Change", onclick:function(){ tp.rag=(tp.rag+1)%3; tp.last=TODAY; save(); render(); }, text:["RED","AMBER","GREEN"][tp.rag]}),
+        h("span", {text:tp.name}),
+        h("button", {class:"x", type:"button", "aria-label":"Remove "+tp.name, onclick:function(){ s.topics.splice(i,1); save(); render(); }, text:"Remove"})));
+    });
+    var nt = {v:""}, tid = "nt-"+s.id;
+    var inp = h("input", {type:"text", id:tid, placeholder:"Add a topic, e.g. Macbeth: ambition", oninput:function(e){ nt.v=e.target.value; }, onkeydown:function(e){ if(e.key==="Enter") addT(); }});
+    function addT(){ var v=nt.v.trim(); if(!v) return; s.topics.push({id:uid(), name:v, rag:0, last:""}); save(); render(); setTimeout(function(){ var el=document.getElementById(tid); if(el) el.focus(); },10); }
+    g.append(h("div", {class:"panel subj"},
+      h("div", {style:"display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline"}, h("h3", {text:s.name}), chip),
+      h("div", {class:"form"},
+        h("label", {class:"f", for:"cur-"+s.id}, "Working at now", selectEl("cur-"+s.id, GRADES, s.current, function(v){ s.current=v; save(); render(); })),
+        h("label", {class:"f", for:"tar-"+s.id}, "Target grade", selectEl("tar-"+s.id, GRADES.slice(1), s.target, function(v){ s.target=v; save(); render(); }))),
+      s.topics.length ? h("div", {class:"small muted", text:reds+" red · "+(s.topics.length-reds-greens)+" amber · "+greens+" green"}) : null,
+      list,
+      h("div", {style:"display:grid;grid-template-columns:1fr auto;gap:8px"}, inp, h("button", {class:"btn", type:"button", onclick:addT, text:"Add"}))));
+  });
+  wrap.append(g);
+}
+
+/* ---------- Technique ---------- */
+function vTechnique(wrap){
+  wrap.append(h("div", {class:"panel"}, h("h2", {text:"Before you write anything: Box, Underline, Count"}),
+    h("ol", {class:"steps"},
+      h("li", null, h("b", {text:"Box "}), "the command word. It tells you what the marker is looking for."),
+      h("li", null, h("b", {text:"Underline "}), "the key words, so you answer this question and not the one you hoped for."),
+      h("li", null, h("b", {text:"Count "}), "the marks. That is roughly how many separate points the marker needs to see.")),
+    h("div", {class:"small muted", text:"Knowing it is not enough. Markers can only give marks for what is written down, in the shape the mark scheme expects."})));
+
+  /* answer builder */
+  var st = {cw:"Explain", marks:"6", paperMin:"", paperMarks:""};
+  var out = h("div", {class:"out", "aria-live":"polite"});
+  function build(){
+    out.textContent = "";
+    var c = COMMAND.filter(function(x){ return x.w.indexOf(st.cw)===0; })[0] || COMMAND[2];
+    var mk = Math.max(1, parseInt(st.marks,10)||1);
+    var dev = /Explain|Analyse|Evaluate|Discuss|Justify/.test(c.w);
+    var pts = dev ? Math.ceil(mk/2) : mk;
+    var rate = (parseFloat(st.paperMin)>0 && parseFloat(st.paperMarks)>0) ? parseFloat(st.paperMin)/parseFloat(st.paperMarks) : 1.2;
+    var mins = Math.max(1, Math.round(mk*rate));
+    out.append(h("div", {class:"kpis"},
+      h("div", {class:"kpi"}, h("div", {class:"small muted", text:dev?"Developed points":"Separate points"}), h("div", {class:"big-n", text:String(pts)})),
+      h("div", {class:"kpi"}, h("div", {class:"small muted", text:"Time to spend"}), h("div", {class:"big-n", text:"~"+mins+" min"}))),
+      h("div", null, h("b", {text:c.w+": "}), c.m),
+      h("div", {class:"small", text:"How: "+c.tip}),
+      /Evaluate/.test(c.w) ? h("div", {class:"small", text:"Plan: for ("+Math.ceil(pts/2)+" points), against ("+Math.floor(pts/2)+"), then a judgement."}) : null,
+      h("div", {class:"small muted", text: rate===1.2 ? "Time uses about 1.2 minutes per mark. Enter the paper's length and total marks for an exact figure." : "Based on "+st.paperMin+" minutes for "+st.paperMarks+" marks."}));
+  }
+  wrap.append(h("div", {class:"two"},
+    h("div", {class:"panel"}, h("h2", {text:"Answer builder"}), h("div", {class:"small muted", text:"Use it before answering any question worth 4 marks or more."}),
+      h("div", {class:"form"},
+        h("label", {class:"f", for:"ab-cw"}, "Command word", selectEl("ab-cw", COMMAND.map(function(c){ var w=c.w.split(" /")[0]; return [w, c.w]; }), "Explain", function(v){ st.cw=v; build(); })),
+        h("label", {class:"f", for:"ab-m"}, "Marks", h("input", {type:"number", id:"ab-m", min:"1", max:"40", value:"6", oninput:function(e){ st.marks=e.target.value; build(); }})),
+        h("label", {class:"f", for:"ab-pm"}, "Paper length (min)", h("input", {type:"number", id:"ab-pm", min:"1", placeholder:"optional", oninput:function(e){ st.paperMin=e.target.value; build(); }})),
+        h("label", {class:"f", for:"ab-pt"}, "Paper total marks", h("input", {type:"number", id:"ab-pt", min:"1", placeholder:"optional", oninput:function(e){ st.paperMarks=e.target.value; build(); }}))),
+      out),
+    h("div", {class:"panel"}, h("h2", {text:"Answer shapes by subject"}),
+      STRUCTURES.map(function(s){ return h("details", null, h("summary", {style:"cursor:pointer;font-weight:700;padding:4px 0", text:s.s}), h("ol", {class:"steps small"}, s.lines.map(function(l){ return h("li",{text:l}); }))); }))));
+  build();
+
+  wrap.append(h("div", {class:"panel"}, h("h2", {text:"Command words: what the marker wants"}),
+    h("div", {class:"cw"}, COMMAND.map(function(c){ return h("div", null, h("b", {text:c.w}), h("span", {class:"small", text:c.m}), h("span", {class:"small muted", text:c.tip})); })),
+    h("div", {class:"small muted", text:"These are general rules that hold across most GCSE boards. Your teachers' mark schemes for your exact board come first."})));
+}
+
+/* ---------- Papers ---------- */
+function vPapers(wrap){
+  var p = P();
+  var f = {date:TODAY, subj:(p.subjects[0]||{}).id||"", title:"", score:"", total:"", minutes:"", finished:"yes", extra:"", note:"", lost:{}};
+  var msg = h("span", {class:"small", style:"color:var(--bad)"});
+  function num(id,label,key,ph){ return h("label",{class:"f",for:id},label,h("input",{type:"number",id:id,min:"0",placeholder:ph||"",oninput:function(e){ f[key]=e.target.value; }})); }
+  var form = h("div", {class:"panel"}, h("h2", {text:"Log a marked practice paper or question set"}),
+    h("div", {class:"form"},
+      h("label",{class:"f",for:"pp-d"},"Date",h("input",{type:"date",id:"pp-d",value:TODAY,max:TODAY,oninput:function(e){ f.date=e.target.value; }})),
+      h("label",{class:"f",for:"pp-s"},"Subject",selectEl("pp-s", p.subjects.map(function(s){return [s.id,s.name];}), f.subj, function(v){ f.subj=v; })),
+      h("label",{class:"f",for:"pp-t",style:"grid-column:span 2"},"What was it?",h("input",{type:"text",id:"pp-t",placeholder:"e.g. 2023 Paper 1, Section B",oninput:function(e){ f.title=e.target.value; }})),
+      num("pp-sc","Marks scored","score"), num("pp-to","Out of","total"), num("pp-mi","Time allowed (min)","minutes","optional")),
+    h("div", {class:"form"},
+      h("label",{class:"f",for:"pp-fi"},"Finished in the time?",selectEl("pp-fi",[["yes","Yes"],["rushed","Yes, but rushed"],["no","No"],["untimed","Not timed"]],"yes",function(v){ f.finished=v; })),
+      num("pp-ex","Extra minutes needed to finish","extra","if not finished")),
+    h("h3", {text:"Where did the lost marks go?"}),
+    h("div", {class:"small muted", text:"Go through the mark scheme and put each lost mark under one reason. This is the most useful part."}),
+    h("div", {class:"lost"}, LOSS.map(function(l){ return h("label", {for:"ls-"+l.id}, l.n, h("input",{type:"number",id:"ls-"+l.id,min:"0",placeholder:"0",oninput:function(e){ f.lost[l.id]=Math.max(0,parseInt(e.target.value,10)||0); }})); })),
+    h("label",{class:"f",for:"pp-n"},"Anything that helped or got in the way?",h("input",{type:"text",id:"pp-n",placeholder:"e.g. hand ached by question 5; typing my plan helped",oninput:function(e){ f.note=e.target.value; }})),
+    h("div", {style:"display:flex;gap:10px;align-items:center"}, h("button",{class:"btn primary",type:"button",onclick:function(){
+      var sc=parseFloat(f.score), to=parseFloat(f.total);
+      if(!(to>0) || isNaN(sc) || sc<0 || sc>to){ msg.textContent="Enter marks scored and the total (scored can't be more than the total)."; return; }
+      p.papers.push({id:uid(), date:f.date, subj:f.subj, title:f.title.trim(), score:sc, total:to, minutes:parseFloat(f.minutes)||0, finished:f.finished, extra:parseFloat(f.extra)||0, lost:f.lost, note:f.note.trim()});
+      save(); render();
+    },text:"Save paper"}), msg));
+
+  /* analysis */
+  var t = lossTotals(), sum = LOSS.reduce(function(a,l){ return a+t[l.id]; },0);
+  var tech = LOSS.filter(function(l){ return l.tech; }).reduce(function(a,l){ return a+t[l.id]; },0);
+  var ana = h("div", {class:"panel"}, h("h2", {text:"Where the marks go"}));
+  if(sum){
+    ana.append(h("div", {class:"out"}, h("div", {class:"big-n", text:Math.round(100*tech/sum)+"%"}),
+      h("div", {text:"of lost marks were about showing what you know, not about knowing it."+(tech/sum>=0.5?" That is good news: technique is quicker to fix than content.":"")})));
+    LOSS.slice().sort(function(a,b){ return t[b.id]-t[a.id]; }).forEach(function(l){
+      if(!t[l.id]) return;
+      ana.append(h("div", {class:"brow", style:"--pc:"+(l.tech?"var(--accent)":"var(--hi)")}, h("span",{text:l.n}), h("div",{class:"bar"},h("i",{style:"width:"+Math.round(100*t[l.id]/sum)+"%"})), h("span",{class:"num small",text:t[l.id]+" marks"})));
+    });
+    ana.append(h("div", {class:"small muted", text:"Blue: technique. Gold: content knowledge."}));
+  } else ana.append(h("div", {class:"muted small", text:"Once a paper is logged with its lost marks, this shows whether marks are lost on knowledge or on technique."}));
+  wrap.append(h("div", {class:"two"}, form, ana));
+
+  /* trend per subject */
+  var trend = h("div", {class:"panel"}, h("h2", {text:"Scores over time"}));
+  var any = false;
+  p.subjects.forEach(function(s){
+    var ps = p.papers.filter(function(x){ return x.subj===s.id; }).sort(function(a,b){ return a.date<b.date?-1:1; });
+    if(!ps.length) return; any = true;
+    var W=600,H=120,L=6,R=46,T=10,B=10, pts = ps.map(function(x,i){ var pc=100*x.score/x.total; return [L+(ps.length===1?(W-L-R)/2:i*(W-L-R)/(ps.length-1)), T+(H-T-B)*(1-pc/100), pc]; });
+    var NS="http://www.w3.org/2000/svg", svg=document.createElementNS(NS,"svg"); svg.setAttribute("viewBox","0 0 "+W+" "+H); svg.setAttribute("width","100%"); svg.setAttribute("role","img"); svg.setAttribute("aria-label",s.name+" scores, latest "+Math.round(pts[pts.length-1][2])+"%");
+    function el(n,a){ var e=document.createElementNS(NS,n); Object.keys(a).forEach(function(k){e.setAttribute(k,a[k]);}); svg.append(e); return e; }
+    [0,50,100].forEach(function(v){ var y=T+(H-T-B)*(1-v/100); el("line",{x1:L,x2:W-R,y1:y,y2:y,stroke:"var(--line)"}); var tx=el("text",{x:W-R+6,y:y+4,"font-size":"14",fill:"var(--muted)"}); tx.textContent=v+"%"; });
+    var gl = parseFloat(s.gradeLine); if(gl>0){ var y=T+(H-T-B)*(1-gl/100); el("line",{x1:L,x2:W-R,y1:y,y2:y,stroke:"var(--hi)","stroke-dasharray":"5 4","stroke-width":"1.5"}); }
+    if(pts.length>1) el("polyline",{points:pts.map(function(q){return q[0]+","+q[1];}).join(" "),fill:"none",stroke:"var(--accent)","stroke-width":"2.5","stroke-linejoin":"round"});
+    pts.forEach(function(q,i){ var c=el("circle",{cx:q[0],cy:q[1],r:i===pts.length-1?"5":"3.5",fill:"var(--accent)"}); var ti=document.createElementNS(NS,"title"); ti.textContent=fmt(ps[i].date)+": "+Math.round(q[2])+"%"; c.append(ti); });
+    trend.append(h("div", null, h("div",{style:"display:flex;justify-content:space-between;gap:8px"},h("b",{text:s.name}),h("span",{class:"small muted num",text:"latest "+Math.round(pts[pts.length-1][2])+"%"+(gl>0?" · target line "+gl+"%":"")})), svg));
+  });
+  if(!any) trend.append(h("div", {class:"muted small", text:"Each subject gets a line here once papers are logged. Add the percentage your school uses for your target grade in Set up to see a target line."}));
+
+  /* evidence */
+  var timed = p.papers.filter(function(x){ return x.finished!=="untimed"; });
+  var notDone = timed.filter(function(x){ return x.finished==="no"; }), rushed = timed.filter(function(x){ return x.finished==="rushed"; });
+  var extras = notDone.filter(function(x){ return x.extra>0; });
+  var avgExtra = extras.length ? Math.round(extras.reduce(function(a,x){return a+x.extra;},0)/extras.length) : 0;
+  var summary = [
+    (p.name||"Student")+": practice paper record ("+(p.papers.length?fmt(p.papers.map(function(x){return x.date;}).sort()[0],{day:"numeric",month:"long",year:"numeric"})+" to "+fmt(TODAY,{day:"numeric",month:"long",year:"numeric"}):"no papers yet")+")",
+    "Timed papers logged: "+timed.length,
+    "Not finished in the time allowed: "+notDone.length+(extras.length?" (average extra time needed: "+avgExtra+" minutes)":""),
+    "Finished but rushed: "+rushed.length,
+    "Marks lost through running out of time: "+t.time+"; through handwriting or layout: "+t.legible+"; through underdeveloped answers: "+t.underdev,
+    "Notes recorded:"
+  ].concat(p.papers.filter(function(x){return x.note;}).map(function(x){ return "- "+fmt(x.date)+" ("+subjName(x.subj)+"): "+x.note; })).join("\n");
+  var ta = h("textarea", {readonly:true, "aria-label":"Summary for school", style:"min-height:150px;font-size:13.5px", value:summary});
+  var cm = h("span", {class:"small muted"});
+  var ev = h("div", {class:"panel"}, h("h2", {text:"Evidence for school"}),
+    h("div", {class:"small", text:"Exam support such as extra time or a word processor does not always need a diagnosis, but the school must show a 'picture of need' and that it is his normal way of working. This record builds that picture as he practises. Share it with the SENCo, ideally well before mocks."}),
+    h("div", {class:"kpis"},
+      h("div",{class:"kpi"},h("div",{class:"small muted",text:"Timed papers"}),h("div",{class:"big-n",text:String(timed.length)})),
+      h("div",{class:"kpi"},h("div",{class:"small muted",text:"Not finished"}),h("div",{class:"big-n",text:String(notDone.length)})),
+      h("div",{class:"kpi"},h("div",{class:"small muted",text:"Avg extra time"}),h("div",{class:"big-n",text:avgExtra?avgExtra+" min":"–"}))),
+    ta, h("div", {style:"display:flex;gap:10px;align-items:center"}, h("button",{class:"btn",type:"button",onclick:function(){ ta.select(); try{ navigator.clipboard.writeText(summary).then(function(){cm.textContent="Copied.";},function(){cm.textContent="Text selected: press Ctrl+C to copy.";}); }catch(e){ cm.textContent="Text selected: press Ctrl+C to copy."; } },text:"Copy summary"}), cm));
+  wrap.append(h("div", {class:"two"}, trend, ev));
+
+  if(p.papers.length){
+    var tb = h("tbody");
+    p.papers.slice().sort(function(a,b){ return a.date<b.date?1:-1; }).forEach(function(x){
+      tb.append(h("tr", null, h("td",{text:fmt(x.date)}), h("td",{text:subjName(x.subj)}), h("td",{text:x.title||"–"}), h("td",{class:"n",text:x.score+"/"+x.total}), h("td",{class:"n",text:Math.round(100*x.score/x.total)+"%"}), h("td",{text:{yes:"Yes",rushed:"Rushed",no:"No",untimed:"Untimed"}[x.finished]}),
+        h("td", null, h("button",{class:"x",type:"button","aria-label":"Delete this paper",onclick:function(){ p.papers=p.papers.filter(function(y){return y.id!==x.id;}); save(); render(); },text:"Delete"}))));
+    });
+    wrap.append(h("div", {class:"panel scroll"}, h("h3",{text:"All papers"}), h("table", null, h("thead",null,h("tr",null,["Date","Subject","Paper","Score","%","Finished",""].map(function(c,i){ return h("th",{class:i===3||i===4?"n":null,text:c}); }))), tb)));
+  }
+}
+
+/* ---------- Set up ---------- */
+var confirmDel = false;
+function vSetup(wrap){
+  var p = P();
+  wrap.append(h("div", {class:"panel"}, h("h2", {text:"Basics"}),
+    h("div", {class:"form"},
+      h("label",{class:"f",for:"s-n"},"Name",h("input",{type:"text",id:"s-n",value:p.name,oninput:function(e){ p.name=e.target.value.trim(); save(); }, onchange:render})),
+      h("label",{class:"f",for:"s-e"},"First exam date",h("input",{type:"date",id:"s-e",value:p.examDate,oninput:function(e){ if(e.target.value){ p.examDate=e.target.value; save(); } }, onchange:render})),
+      h("label",{class:"f",for:"s-w"},"Study days per week",h("input",{type:"number",id:"s-w",min:"1",max:"7",value:p.weeklyGoal,oninput:function(e){ p.weeklyGoal=Math.max(1,Math.min(7,parseInt(e.target.value,10)||1)); save(); }}))),
+    h("div", {class:"small muted", text:"Summer 2027 GCSEs run from 10 May to 18 June. Use the date of his first exam once the school issues his personal timetable."})));
+
+  var list = h("div", {style:"display:grid;gap:10px"});
+  p.subjects.forEach(function(s,i){
+    list.append(h("div", {class:"form", style:"grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1.2fr) auto"},
+      h("label",{class:"f",for:"sn-"+s.id},i===0?"Subject":"",h("input",{type:"text",id:"sn-"+s.id,"aria-label":"Subject name",value:s.name,oninput:function(e){ s.name=e.target.value; save(); }})),
+      h("label",{class:"f",for:"sb-"+s.id},i===0?"Exam board":"",h("input",{type:"text",id:"sb-"+s.id,"aria-label":"Exam board for "+s.name,placeholder:"e.g. AQA",value:s.board,oninput:function(e){ s.board=e.target.value; save(); }})),
+      h("label",{class:"f",for:"sg-"+s.id},i===0?"% for target grade (optional)":"",h("input",{type:"number",id:"sg-"+s.id,"aria-label":"Percentage for target grade in "+s.name,min:"0",max:"100",value:s.gradeLine,oninput:function(e){ s.gradeLine=e.target.value; save(); }})),
+      h("button",{class:"x",type:"button",style:"margin-bottom:8px","aria-label":"Remove "+s.name,onclick:function(){ p.subjects.splice(i,1); save(); render(); },text:"Remove"})));
+  });
+  wrap.append(h("div", {class:"panel"}, h("h2", {text:"Subjects"}),
+    h("div", {class:"small muted", text:"Add his option subjects and split Science into Biology, Chemistry and Physics if he takes triple. Grade boundaries change every year, so ask teachers for the percentage they use for his target grade."}),
+    list, h("div", null, h("button",{class:"btn",type:"button",onclick:function(){ p.subjects.push({id:uid(),name:"New subject",board:"",current:"",target:"6",gradeLine:"",topics:[]}); save(); render(); },text:"Add a subject"}))));
+
+  var nn = {v:""};
+  var msg = h("span", {class:"small muted"});
+  var fileIn = h("input", {type:"file", accept:".json,application/json", style:"display:none", onchange:function(e){
+    var file = e.target.files[0]; if(!file) return; var r = new FileReader();
+    r.onload = function(){ try{ var d = JSON.parse(r.result); if(!d.profiles || !d.current) throw 0; store = d; save(); render(); }catch(x){ msg.textContent = "That file is not a GCSE game plan backup."; } };
+    r.readAsText(file);
+  }});
+  wrap.append(h("div", {class:"panel"}, h("h2", {text:"Children and data"}),
+    h("div", {class:"small", text:"Each child gets their own plan in this one file. Switch between them at the top of the page. Everything is saved only in this browser on this computer, and nothing is sent online."}),
+    h("div", {class:"form"}, h("label",{class:"f",for:"np"},"Add another child",h("input",{type:"text",id:"np",placeholder:"Name",oninput:function(e){ nn.v=e.target.value; }})),
+      h("div", null, h("button",{class:"btn",type:"button",onclick:function(){ var n=nn.v.trim(); if(!n) return; var id="p"+uid(); store.profiles[id]=newProfile(n); store.current=id; save(); render(); },text:"Add and switch"}))),
+    h("div", {style:"display:flex;gap:8px;flex-wrap:wrap;align-items:center"},
+      h("button",{class:"btn primary",type:"button",onclick:function(){
+        Object.keys(store.profiles).forEach(function(id){ store.profiles[id].lastBackup = Date.now(); }); save();
+        var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(store,null,1)],{type:"application/json"})); a.download="gcse-game-plan-backup-"+TODAY+".json"; document.body.append(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500); msg.textContent="Backup downloaded.";
+      },text:"Download backup"}),
+      h("button",{class:"btn",type:"button",onclick:function(){ fileIn.click(); },text:"Restore from backup"}), fileIn,
+      confirmDel ? [h("button",{class:"btn danger",type:"button",onclick:function(){ delete store.profiles[store.current]; var ids=Object.keys(store.profiles); if(!ids.length){ var id="p"+uid(); store.profiles[id]=newProfile(""); ids=[id]; } store.current=ids[0]; confirmDel=false; save(); render(); },text:"Yes, delete this plan"}), h("button",{class:"btn",type:"button",onclick:function(){ confirmDel=false; render(); },text:"Cancel"})]
+                 : h("button",{class:"btn danger",type:"button",onclick:function(){ confirmDel=true; render(); },text:"Delete this child's plan"}),
+      msg),
+    h("div", {class:"small muted", text: p.lastBackup ? "Last backup: "+new Date(p.lastBackup).toLocaleDateString("en-GB",{day:"numeric",month:"long"})+"." : "No backup yet. Clearing browser data would erase this plan, so download one weekly."})));
+}
+
+render();
+})();
+</script>
+</body>
+</html>
